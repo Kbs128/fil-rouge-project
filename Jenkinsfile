@@ -10,11 +10,12 @@ pipeline {
         githubPush() // Déclenche sur push GitHub
     }
 
+    stages {
         stage('Clone Repository') {
             steps {
-               git branch: 'Main', url: 'https://github.com/Kbs128/fil-rouge-project.git'
-           }
-       }
+                git branch: 'Main', url: 'https://github.com/Kbs128/fil-rouge-project.git'
+            }
+        }
 
         stage('Build Application') {
             steps {
@@ -33,7 +34,7 @@ pipeline {
         stage('Push to Docker Hub') {
             steps {
                 script {
-                    withDockerRegistry([credentialsId: 'docker-hub-creds', url: '']) {
+                    docker.withRegistry('', 'docker-hub-creds') {
                         dockerImage.push()
                     }
                 }
