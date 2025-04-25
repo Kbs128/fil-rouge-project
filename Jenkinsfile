@@ -10,12 +10,11 @@ pipeline {
         githubPush() // Déclenche sur push GitHub
     }
 
-    stages {
         stage('Clone Repository') {
             steps {
-                git 'https://github.com/Kbs128/fil-rouge-project.git'
-            }
-        }
+               git branch: 'Main', url: 'https://github.com/Kbs128/fil-rouge-project.git'
+           }
+       }
 
         stage('Build Application') {
             steps {
