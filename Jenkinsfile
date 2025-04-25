@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_HUB_REPO = 'babs32/Fil-rouge-project'
+        DOCKER_HUB_REPO = 'babs32/fil-rouge-project'
         IMAGE_TAG = "latest"
     }
 
@@ -19,7 +19,7 @@ pipeline {
 
         stage('Build Application') {
             steps {
-                sh './mvnw clean install' // ou `npm install && npm run build` selon ton projet
+                sh './mvnw clean install' // adapte selon ton projet
             }
         }
 
@@ -33,17 +33,21 @@ pipeline {
 
         stage('Push to Docker Hub') {
             steps {
-                withDockerRegistry([credentialsId: 'docker-hub-creds', url: '']) {
-                    dockerImage.push()
+                script {
+                    withDockerRegistry([credentialsId: 'docker-hub-creds', url: '']) {
+                        dockerImage.push()
+                    }
                 }
             }
         }
 
         stage('Deploy Container') {
             steps {
-                sh 'docker stop mon-app || true'
-                sh 'docker rm mon-app || true'
-                sh "docker run -d --name mon-app -p 8080:8080 ${DOCKER_HUB_REPO}:${IMAGE_TAG}"
+                script {
+                    sh 'docker stop mon-app || true'
+                    sh 'docker rm mon-app || true'
+                    sh "docker run -d --name mon-app -p 8080:8080 ${DOCKER_HUB_REPO}:${IMAGE_TAG}"
+                }
             }
         }
     }
