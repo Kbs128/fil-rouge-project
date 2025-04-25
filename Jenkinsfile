@@ -1,5 +1,10 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'python:3.8-slim'  // Utiliser l'image Docker officielle de Python
+            args '-v /tmp:/tmp' // Optionnel, vous pouvez ajouter des arguments pour volume si nécessaire
+        }
+    }
 
     environment {
         DOCKER_HUB_REPO = 'babs32/fil-rouge-project'  // Dépôt Docker Hub
@@ -18,17 +23,11 @@ pipeline {
             }
         }
 
-        stage('Install Python and Dependencies') {
+        stage('Install Dependencies') {
             steps {
                 script {
-                    // Installer Python et pip dans l'image Docker
-                    sh '''
-                        apt-get update && apt-get install -y python3 python3-pip
-                        python3 --version
-                        pip3 --version
-                    '''
-                    // Installer les dépendances Python avec pip
-                    sh 'pip3 install -r requirements.txt'
+                    // Installer les dépendances Python avec pip (utilisant python:3.8-slim)
+                    sh 'pip install -r requirements.txt'
                 }
             }
         }
