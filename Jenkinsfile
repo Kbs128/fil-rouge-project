@@ -13,15 +13,16 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-               git branch: 'Main', url: 'https://github.com/Kbs128/fil-rouge-project.git'
-           }
-       }
+                git branch: 'Main', url: 'https://github.com/Kbs128/fil-rouge-project.git'
+            }
+        }
 
-        stage('Build Application') {
+        stage('Install Dependencies') {
             steps {
-                // Assurez-vous que le fichier mvnw est exécutable
-                sh 'chmod +x ./mvnw'  // Ajoute les permissions d'exécution
-                sh './mvnw clean install' // Utilise le wrapper Maven
+                script {
+                    // Installer les dépendances Python avec pip
+                    sh 'pip install -r requirements.txt'
+                }
             }
         }
 
