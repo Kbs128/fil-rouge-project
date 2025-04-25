@@ -83,8 +83,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.environ.get("DB_NAME", "odcdb"),
-        'USER': os.environ.get("DB_USER", "odcuser"),
-        'PASSWORD': os.environ.get("DB_PASSWORD", "odcpass"),
+        'USER': os.environ.get("DB_USER", "odc"),
+        'PASSWORD': os.environ.get("DB_PASSWORD", "odc12345"),
         'HOST': os.environ.get("DB_HOST", "localhost"),
         'PORT': '5432',
     }

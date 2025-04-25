@@ -23,8 +23,8 @@ services:
       - "8000:8000"
     environment:
       - DB_NAME=odcdb
-      - DB_USER=odcuser
-      - DB_PASSWORD=odcpass
+      - DB_USER=odc
+      - DB_PASSWORD=odc12345
       - DB_HOST=db  # Cela fait référence au service 'db'
     depends_on:
       - db  # Le backend attend que db soit lancé avant de démarrer
