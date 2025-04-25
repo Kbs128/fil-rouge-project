@@ -13,13 +13,15 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-                git branch: 'Main', url: 'https://github.com/Kbs128/fil-rouge-project.git'
-            }
-        }
+               git branch: 'Main', url: 'https://github.com/Kbs128/fil-rouge-project.git'
+           }
+       }
 
         stage('Build Application') {
             steps {
-                sh './mvnw clean install' // adapte selon ton projet
+                // Assurez-vous que le fichier mvnw est exécutable
+                sh 'chmod +x ./mvnw'  // Ajoute les permissions d'exécution
+                sh './mvnw clean install' // Utilise le wrapper Maven
             }
         }
 
@@ -34,7 +36,7 @@ pipeline {
         stage('Push to Docker Hub') {
             steps {
                 script {
-                    docker.withRegistry('', 'docker-hub-creds') {
+                    withDockerRegistry([credentialsId: 'docker-hub-creds', url: '']) {
                         dockerImage.push()
                     }
                 }
