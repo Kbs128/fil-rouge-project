@@ -20,15 +20,15 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 script {
-                    // Récupérer et convertir le chemin du workspace pour Docker sous Windows
-                    def workspaceUnix = bat(script: 'echo %WORKSPACE%', returnStdout: true).trim()
-                    workspaceUnix = workspaceUnix.replaceAll('\\\\', '/').replaceAll('C:', '/c')
-
-                    sh """
-                        docker run --rm \
-                        -v ${workspaceUnix}:/app \
-                        -w /app \
-                        python:3.8-slim \
+                    // Properly format the workspace path for Docker volume mounting
+                    def workspace = pwd()
+                    def dockerWorkspace = workspace.replace('\\', '/').replace('C:', '/c')
+                    
+                    bat """
+                        docker run --rm ^
+                        -v "${dockerWorkspace}:/app" ^
+                        -w /app ^
+                        python:3.8-slim ^
                         pip install -r requirements.txt
                     """
                 }
@@ -38,7 +38,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    sh "docker build -t ${DOCKER_HUB_REPO}:${IMAGE_TAG} ."
+                    bat "docker build -t ${DOCKER_HUB_REPO}:${IMAGE_TAG} ."
                 }
             }
         }
@@ -46,8 +46,8 @@ pipeline {
         stage('Push to Docker Hub') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASSWORD')]) {
-                    sh """
-                        docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
+                    bat """
+                        docker login -u %DOCKER_USER% -p %DOCKER_PASSWORD%
                         docker push ${DOCKER_HUB_REPO}:${IMAGE_TAG}
                     """
                 }
@@ -57,11 +57,11 @@ pipeline {
         stage('Deploy Container') {
             steps {
                 script {
-                    sh '''
-                        docker stop mon-app || true
-                        docker rm mon-app || true
-                        docker run -d --name mon-app -p 8080:8080 ${DOCKER_HUB_REPO}:${IMAGE_TAG}
-                    '''
+                    bat """
+                        docker stop mon-app 2>NUL || EXIT /B 0
+                        docker rm mon-app 2>NUL || EXIT /B 0
+                        docker run -d --name mon-app -p 8080:8080 %DOCKER_HUB_REPO%:%IMAGE_TAG%
+                    """
                 }
             }
         }
