@@ -17,23 +17,19 @@ pipeline {
             }
         }
 
-stage('Install Dependencies') {
-    steps {
-        script {
-            // Convertir le chemin WORKSPACE en chemin valide pour Docker sous Windows
-            def workspaceUnix = powershell(returnStdout: true, script: "(Get-Location).Path -replace '\\\\', '/' -replace 'C:', '/c'").trim()
-
-            sh """
-                docker run --rm \
-                -v ${workspaceUnix}:/app \
-                -w /app \
-                python:3.8-slim \
-                pip install -r requirements.txt
-            """
+        stage('Install Dependencies') {
+            steps {
+                script {
+                    sh """
+                        docker run --rm \
+                        -v ${env.WORKSPACE}:/app \
+                        -w /app \
+                        python:3.8-slim \
+                        pip install -r requirements.txt
+                    """
+                }
+            }
         }
-    }
-}
-
 
         stage('Build Docker Image') {
             steps {
@@ -47,7 +43,7 @@ stage('Install Dependencies') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASSWORD')]) {
                     sh """
-                        docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
+                        echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USER}" --password-stdin
                         docker push ${DOCKER_HUB_REPO}:${IMAGE_TAG}
                     """
                 }
@@ -60,7 +56,7 @@ stage('Install Dependencies') {
                     sh '''
                         docker stop mon-app || true
                         docker rm mon-app || true
-                        docker run -d --name mon-app -p 8080:8080 ${DOCKER_HUB_REPO}:${IMAGE_TAG}
+                        docker run -d --name mon-app -p 8080:8080 babs32/fil-rouge-project:latest
                     '''
                 }
             }
