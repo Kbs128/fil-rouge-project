@@ -20,17 +20,19 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 script {
-                    // Properly format the workspace path for Docker volume mounting
-                    def workspace = pwd()
-                    def dockerWorkspace = workspace.replace('\\', '/').replace('C:', '/c')
-                    
-                    bat """
-                        docker run --rm ^
-                        -v "${dockerWorkspace}:/app" ^
-                        -w /app ^
-                        python:3.8-slim ^
-                        pip install -r requirements.txt
-                    """
+                    // First check if requirements.txt exists in backend directory
+                    bat '''
+                        IF EXIST backend\\requirements.txt (
+                            docker run --rm ^
+                            -v "%CD%/backend:/app" ^
+                            -w /app ^
+                            python:3.8-slim ^
+                            pip install -r requirements.txt
+                        ) ELSE (
+                            echo "requirements.txt not found in backend directory"
+                            exit 1
+                        )
+                    '''
                 }
             }
         }
@@ -38,7 +40,10 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    bat "docker build -t ${DOCKER_HUB_REPO}:${IMAGE_TAG} ."
+                    // Ensure we're building from the correct directory
+                    dir('backend') {
+                        bat "docker build -t ${DOCKER_HUB_REPO}:${IMAGE_TAG} ."
+                    }
                 }
             }
         }
@@ -56,13 +61,11 @@ pipeline {
 
         stage('Deploy Container') {
             steps {
-                script {
-                    bat """
-                        docker stop mon-app 2>NUL || EXIT /B 0
-                        docker rm mon-app 2>NUL || EXIT /B 0
-                        docker run -d --name mon-app -p 8080:8080 %DOCKER_HUB_REPO%:%IMAGE_TAG%
-                    """
-                }
+                bat """
+                    docker stop mon-app 2>NUL || EXIT /B 0
+                    docker rm mon-app 2>NUL || EXIT /B 0
+                    docker run -d --name mon-app -p 8000:8000 %DOCKER_HUB_REPO%:%IMAGE_TAG%
+                """
             }
         }
     }
@@ -73,6 +76,10 @@ pipeline {
         }
         failure {
             echo "❌ Échec du pipeline. Vérifiez les logs."
+        }
+        always {
+            // Clean up
+            bat "docker system prune -f"
         }
     }
 }
