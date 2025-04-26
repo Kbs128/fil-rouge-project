@@ -17,21 +17,23 @@ pipeline {
             }
         }
 
-        stage('Install Dependencies') {
-            steps {
-                script {
-                    // Correction pour transformer le chemin Windows en chemin Docker valide
-                    def workspaceUnix = "${env.WORKSPACE}".replace('C:\\', '/c/').replace('\\', '/')
-                    sh """
-                        docker run --rm \
-                        -v ${workspaceUnix}:/app \
-                        -w /app \
-                        python:3.8-slim \
-                        pip install -r requirements.txt
-                    """
-                }
-            }
+stage('Install Dependencies') {
+    steps {
+        script {
+            // Convertir le chemin WORKSPACE en chemin valide pour Docker sous Windows
+            def workspaceUnix = powershell(returnStdout: true, script: "(Get-Location).Path -replace '\\\\', '/' -replace 'C:', '/c'").trim()
+
+            sh """
+                docker run --rm \
+                -v ${workspaceUnix}:/app \
+                -w /app \
+                python:3.8-slim \
+                pip install -r requirements.txt
+            """
         }
+    }
+}
+
 
         stage('Build Docker Image') {
             steps {
