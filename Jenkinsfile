@@ -11,7 +11,7 @@ pipeline {
     }
 
     options {
-        timestamps() // Ajoute des timestamps aux logs
+        timestamps()
     }
 
     stages {
@@ -21,7 +21,6 @@ pipeline {
             }
         }
 
-stages {
         stage('Install requirements') {
             steps {
                 bat '''
@@ -38,8 +37,6 @@ stages {
                 '''
             }
         }
-    }
-}
 
         stage('Build Docker Image') {
             steps {
@@ -81,7 +78,6 @@ stages {
             echo "❌ Échec du pipeline. Vérifiez les logs."
         }
         always {
-            // Nettoyage prudent
             bat "docker image prune -f"
         }
     }
