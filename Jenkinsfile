@@ -20,14 +20,15 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 script {
-                    // Use docker run for installing dependencies
-                    sh '''
+                    // Correction pour transformer le chemin Windows en chemin Docker valide
+                    def workspaceUnix = "${env.WORKSPACE}".replace('C:\\', '/c/').replace('\\', '/')
+                    sh """
                         docker run --rm \
-                        -v ${WORKSPACE}:/app \
+                        -v ${workspaceUnix}:/app \
                         -w /app \
                         python:3.8-slim \
                         pip install -r requirements.txt
-                    '''
+                    """
                 }
             }
         }
