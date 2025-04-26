@@ -21,25 +21,25 @@ pipeline {
             }
         }
 
-        stage('Install Dependencies') {
+stages {
+        stage('Install requirements') {
             steps {
-                script {
-                    // Check if requirements.txt exists and install inside a container (for validation only)
-                    bat '''
-                        IF EXIST backend\\requirements.txt (
-                            docker run --rm ^
-                            -v "%CD%\\backend:/app" ^
-                            -w /app ^
-                            python:3.8-slim ^
-                            pip install -r requirements.txt
-                        ) ELSE (
-                            echo "requirements.txt not found in backend directory"
-                            exit 1
-                        )
-                    '''
-                }
+                bat '''
+                IF EXIST backend\\requirements.txt (
+                    docker run --rm ^
+                        -v "%WORKSPACE%\\backend:/app" ^
+                        -w /app ^
+                        python:3.12-slim ^
+                        pip install -r requirements.txt
+                ) ELSE (
+                    echo "requirements.txt not found in backend directory"
+                    exit 1
+                )
+                '''
             }
         }
+    }
+}
 
         stage('Build Docker Image') {
             steps {
