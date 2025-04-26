@@ -20,9 +20,13 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 script {
+                    // Récupérer et convertir le chemin du workspace pour Docker sous Windows
+                    def workspaceUnix = bat(script: 'echo %WORKSPACE%', returnStdout: true).trim()
+                    workspaceUnix = workspaceUnix.replaceAll('\\\\', '/').replaceAll('C:', '/c')
+
                     sh """
                         docker run --rm \
-                        -v ${env.WORKSPACE}:/app \
+                        -v ${workspaceUnix}:/app \
                         -w /app \
                         python:3.8-slim \
                         pip install -r requirements.txt
@@ -43,7 +47,7 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASSWORD')]) {
                     sh """
-                        echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USER}" --password-stdin
+                        docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
                         docker push ${DOCKER_HUB_REPO}:${IMAGE_TAG}
                     """
                 }
@@ -56,10 +60,19 @@ pipeline {
                     sh '''
                         docker stop mon-app || true
                         docker rm mon-app || true
-                        docker run -d --name mon-app -p 8080:8080 babs32/fil-rouge-project:latest
+                        docker run -d --name mon-app -p 8080:8080 ${DOCKER_HUB_REPO}:${IMAGE_TAG}
                     '''
                 }
             }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ Déploiement réussi !"
+        }
+        failure {
+            echo "❌ Échec du pipeline. Vérifiez les logs."
         }
     }
 }
