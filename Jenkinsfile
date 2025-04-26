@@ -10,6 +10,10 @@ pipeline {
         githubPush()
     }
 
+    options {
+        timestamps() // Ajoute des timestamps aux logs
+    }
+
     stages {
         stage('Clone Repository') {
             steps {
@@ -20,11 +24,11 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 script {
-                    // First check if requirements.txt exists in backend directory
+                    // Check if requirements.txt exists and install inside a container (for validation only)
                     bat '''
                         IF EXIST backend\\requirements.txt (
                             docker run --rm ^
-                            -v "%CD%/backend:/app" ^
+                            -v "%CD%\\backend:/app" ^
                             -w /app ^
                             python:3.8-slim ^
                             pip install -r requirements.txt
@@ -40,9 +44,8 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Ensure we're building from the correct directory
                     dir('backend') {
-                        bat "docker build -t ${DOCKER_HUB_REPO}:${IMAGE_TAG} ."
+                        bat "docker build -t %DOCKER_HUB_REPO%:%IMAGE_TAG% ."
                     }
                 }
             }
@@ -53,7 +56,7 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASSWORD')]) {
                     bat """
                         docker login -u %DOCKER_USER% -p %DOCKER_PASSWORD%
-                        docker push ${DOCKER_HUB_REPO}:${IMAGE_TAG}
+                        docker push %DOCKER_HUB_REPO%:%IMAGE_TAG%
                     """
                 }
             }
@@ -78,8 +81,8 @@ pipeline {
             echo "❌ Échec du pipeline. Vérifiez les logs."
         }
         always {
-            // Clean up
-            bat "docker system prune -f"
+            // Nettoyage prudent
+            bat "docker image prune -f"
         }
     }
 }
