@@ -8,8 +8,8 @@ pipeline {
     }
 
     tools {
-        // Utilise le scanner SonarQube que tu as configuré dans la configuration globale
-        sonar 'SonarScanner' // Remplacer par le nom de ton scanner SonarQube
+        // Utilise l'installation SonarQube configurée dans Jenkins
+        sonar 'SonarScanner' // Remplacer par le nom exact de ton scanner SonarQube
     }
 
     stages {
