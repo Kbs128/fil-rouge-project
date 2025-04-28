@@ -1,12 +1,18 @@
 pipeline {
     agent any
 
+    tools {
+        // Définir l'outil Python si disponible dans Jenkins (vérifie si l'outil Python3 est configuré)
+        python 'Python3' // Assure-toi que Python3 est installé sur Jenkins
+    }
+
     environment {
-        SONARQUBE_SERVER = 'SonarQube' // Nom de ton serveur SonarQube dans Jenkins
+        // Variables d'environnement si nécessaire
+        VIRTUAL_ENV = "${workspace}/venv"
     }
 
     stages {
-        stage('Checkout') {
+        stage('Declarative: Checkout SCM') {
             steps {
                 checkout scm
             }
@@ -14,49 +20,61 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh '''
-                    python3 -m venv venv
-                    . venv/bin/activate
-                    pip install --upgrade pip
-                    pip install -r requirements.txt
-                '''
+                script {
+                    // Créer un environnement virtuel et activer
+                    sh '''
+                        python3 -m venv venv
+                        . venv/bin/activate
+                        pip install --upgrade pip --break-system-packages
+                        pip install -r requirements.txt --break-system-packages
+                    '''
+                }
             }
         }
 
         stage('Run Tests') {
             steps {
-                sh '''
-                    . venv/bin/activate
-                    pytest
-                '''
+                // Exemple de tests avec pytest ou une autre commande
+                script {
+                    sh '''
+                        . venv/bin/activate
+                        pytest --maxfail=1 --disable-warnings -q
+                    '''
+                }
             }
         }
 
         stage('SonarQube Analysis') {
-            environment {
-                SONAR_TOKEN = credentials('sonarqube-token') // ID du credential SonarQube
-            }
             steps {
-                withSonarQubeEnv('SonarQube') {
+                script {
+                    // Analyser le code avec SonarQube
                     sh '''
                         . venv/bin/activate
-                        sonar-scanner \
-                        -Dsonar.projectKey=fil-rouge-project \
-                        -Dsonar.sources=. \
-                        -Dsonar.host.url=$SONAR_HOST_URL \
-                        -Dsonar.login=$SONAR_AUTH_TOKEN
+                        sonar-scanner
                     '''
                 }
+            }
+        }
+
+        stage('Declarative: Post Actions') {
+            steps {
+                echo '❌ Le pipeline a échoué !'  // Ou un message en fonction du succès
             }
         }
     }
 
     post {
-        success {
-            echo '✅ Pipeline terminé avec succès!'
+        always {
+            // Nettoyage ou actions à faire après l'exécution du pipeline
+            echo 'Pipeline terminé.'
         }
+
+        success {
+            echo '✅ Pipeline réussi !'
+        }
+
         failure {
-            echo '❌ Le pipeline a échoué!'
+            echo '❌ Le pipeline a échoué.'
         }
     }
 }
