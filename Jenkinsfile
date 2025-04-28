@@ -11,7 +11,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 // Checkout the project from GitHub
-                git 'https://github.com/Kbs128/fil-rouge-project.git'
+              git branch: 'Main', url: 'https://github.com/Kbs128/fil-rouge-project.git'
             }
         }
 
@@ -28,12 +28,6 @@ pipeline {
                     """
                 }
             }
-        }
-    }
-
-    post {
-        always {
-            // Clean up or notify users if needed
         }
     }
 }
