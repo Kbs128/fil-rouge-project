@@ -2,35 +2,44 @@ pipeline {
     agent any
 
     environment {
-        // Définit la clé d'authentification pour SonarQube
         SONARQUBE_URL = 'http://35.88.247.54:9000'
-        SONARQUBE_TOKEN = 'sqp_77e99502d57384ba59cc634801e9e7eada83ec42'
+        SONARQUBE_TOKEN = credentials('sonarqube-token') // Use Jenkins credentials
     }
 
     tools {
-        // Utilise l'installation SonarQube configurée dans Jenkins
-        sonar 'SonarScanner' // Remplacer par le nom exact de ton scanner SonarQube
+        // Use the correct tool name as shown in the error message
+        maven 'Maven' // If you need Maven
+        jdk 'JDK' // If you need JDK
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // Récupère le code depuis GitHub
                 checkout scm
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
-                script {
-                    // Exécute le scanner SonarQube
-                    sh """
-                    sonar-scanner \
-                        -Dsonar.projectKey=fil-rouge-project \
-                        -Dsonar.sources=. \
-                        -Dsonar.host.url=${env.SONARQUBE_URL} \
-                        -Dsonar.login=${env.SONARQUBE_TOKEN}
-                    """
+                withSonarQubeEnv('SonarQube') { // Use the name configured in Jenkins
+                    script {
+                        def scannerHome = tool 'SonarScanner' // Use the name configured in Jenkins
+                        bat """
+                            ${scannerHome}/bin/sonar-scanner \
+                            -Dsonar.projectKey=fil-rouge-project \
+                            -Dsonar.sources=. \
+                            -Dsonar.host.url=${SONARQUBE_URL} \
+                            -Dsonar.login=${SONARQUBE_TOKEN}
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('Quality Gate') {
+            steps {
+                timeout(time: 1, unit: 'HOURS') {
+                    waitForQualityGate abortPipeline: true
                 }
             }
         }
@@ -38,14 +47,11 @@ pipeline {
 
     post {
         always {
-            // Ce bloc est exécuté après les étapes du pipeline
             echo 'Pipeline terminé.'
         }
-
         success {
             echo 'Analyse SonarQube réussie!'
         }
-
         failure {
             echo 'L\'analyse SonarQube a échoué.'
         }
