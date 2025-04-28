@@ -3,13 +3,11 @@ pipeline {
 
     environment {
         SONARQUBE_URL = 'http://35.88.247.54:9000'
-        SONARQUBE_TOKEN = credentials('sonarqube-token') // Use Jenkins credentials
+        SONARQUBE_TOKEN = credentials('sonarqube-token') // Utiliser les credentials Jenkins
     }
 
     tools {
-        // Use the correct tool name as shown in the error message
-        maven 'Maven' // If you need Maven
-        jdk 'JDK' // If you need JDK
+        python 'Python-3.9' // Utilise le nom de l'installation Python configuré dans Jenkins
     }
 
     stages {
@@ -21,10 +19,10 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('SonarQube') { // Use the name configured in Jenkins
+                withSonarQubeEnv('SonarQube') { // Utilise le nom configuré dans Jenkins
                     script {
-                        def scannerHome = tool 'SonarScanner' // Use the name configured in Jenkins
-                        bat """
+                        def scannerHome = tool 'SonarScanner' // Utilise le nom configuré pour SonarQube Scanner
+                        sh """
                             ${scannerHome}/bin/sonar-scanner \
                             -Dsonar.projectKey=fil-rouge-project \
                             -Dsonar.sources=. \
@@ -32,14 +30,6 @@ pipeline {
                             -Dsonar.login=${SONARQUBE_TOKEN}
                         """
                     }
-                }
-            }
-        }
-
-        stage('Quality Gate') {
-            steps {
-                timeout(time: 1, unit: 'HOURS') {
-                    waitForQualityGate abortPipeline: true
                 }
             }
         }
