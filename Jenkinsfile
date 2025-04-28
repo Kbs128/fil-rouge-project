@@ -1,31 +1,36 @@
 pipeline {
     agent any
-    tools {
-        python 'Python-3.10' // <-- adapte le nom selon ton installation Jenkins
-    }
+
     stages {
-        stage('Checkout') {
+        stage('Install Dependencies') {
             steps {
-                git branch: 'Main', url: 'https://github.com/Kbs128/fil-rouge-project.git'
+                sh '''
+                    python3 -m venv venv
+                    source venv/bin/activate
+                    pip install -r requirements.txt
+                '''
             }
         }
-        stage('Install dependencies') {
+        stage('Run Tests') {
             steps {
-                sh 'pip install -r requirements.txt'
+                sh '''
+                    source venv/bin/activate
+                    python manage.py test
+                '''
             }
         }
-        stage('SonarQube Scan') {
-            environment {
-                SONAR_SCANNER_HOME = tool 'SonarScanner' // <-- configure SonarScanner dans Jenkins
-            }
+        stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('sonar') {
-                    sh "${SONAR_SCANNER_HOME}/bin/sonar-scanner \
+                    sh '''
+                        sonar-scanner \
                         -Dsonar.projectKey=fil-rouge-project \
                         -Dsonar.sources=. \
+                        -Dsonar.language=py \
                         -Dsonar.python.version=3.10 \
                         -Dsonar.host.url=$SONAR_HOST_URL \
-                        -Dsonar.login=$SONAR_AUTH_TOKEN"
+                        -Dsonar.login=$SONAR_AUTH_TOKEN
+                    '''
                 }
             }
         }
