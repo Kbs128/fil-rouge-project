@@ -28,11 +28,11 @@ pipeline {
                     script {
                         def scannerHome = tool 'SonarScanner' // Utilise le nom configuré pour SonarQube Scanner
                         sh """
-                            ${scannerHome}/bin/sonar-scanner \
-                            -Dsonar.projectKey=fil-rouge-project \
-                            -Dsonar.sources=. \
-                            -Dsonar.host.url=${SONARQUBE_URL} \
-                            -Dsonar.login=${SONARQUBE_TOKEN}
+                         ${scannerHome}/bin/sonar-scanner \
+                         -Dsonar.projectKey=fil-rouge-project \
+                         -Dsonar.sources=. \
+                         -Dsonar.host.url=${SONARQUBE_URL} \
+                         -Dsonar.login=${SONARQUBE_TOKEN}
                         """
                     }
                 }
