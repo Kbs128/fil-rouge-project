@@ -8,7 +8,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'master', url: 'https://github.com/Kbs128/fil-rouge-project.git'
+                git branch: 'Main', url: 'https://github.com/Kbs128/fil-rouge-project.git'
             }
         }
 
