@@ -1,54 +1,34 @@
 pipeline {
     agent any
 
+    tools {
+        sonarScanner 'SonarScanner'  // Nom que tu as configuré dans Jenkins > Global Tool Configuration
+    }
+
     environment {
-        SONARQUBE_URL = 'http://35.88.247.54:9000'
-        SONARQUBE_TOKEN = credentials('sonarqube-token') // Utiliser les credentials Jenkins
+        SONARQUBE_SERVER = 'SonarQube'   // Nom de ton serveur Sonar dans Jenkins
+        SONARQUBE_TOKEN = credentials('sonar-token')  // ID du credential Jenkins où tu as stocké ton token Sonar
     }
 
     stages {
-        stage('Checkout') {
+        stage('Checkout SCM') {
             steps {
                 checkout scm
             }
         }
-
-        stage('Verify Python Installation') {
-            steps {
-                script {
-                    // Vérifier la version de Python installée
-                    sh 'python3 --version || echo "Python n\'est pas installé"'
-                }
-            }
-        }
-
+        
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('SonarQube') { // Utilise le nom configuré dans Jenkins
-                    script {
-                        def scannerHome = tool 'SonarScanner' // Utilise le nom configuré pour SonarQube Scanner
-                        sh """
-                         ${scannerHome}/bin/sonar-scanner \
-                         -Dsonar.projectKey=fil-rouge-project \
-                         -Dsonar.sources=. \
-                         -Dsonar.host.url=${SONARQUBE_URL} \
-                         -Dsonar.login=${SONARQUBE_TOKEN}
-                        """
-                    }
+                withSonarQubeEnv("${SonarQubeScanner}") {
+                    sh '''
+                        sonar-scanner \
+                          -Dsonar.projectKey=fil-rouge-project \
+                          -Dsonar.sources=. \
+                          -Dsonar.host.url=http://35.88.247.54:9000 \
+                          -Dsonar.login=${SONARQUBE_TOKEN}
+                    '''
                 }
             }
-        }
-    }
-
-    post {
-        always {
-            echo 'Pipeline terminé.'
-        }
-        success {
-            echo 'Analyse SonarQube réussie!'
-        }
-        failure {
-            echo 'L\'analyse SonarQube a échoué.'
         }
     }
 }
