@@ -1,12 +1,8 @@
 pipeline {
     agent any
 
-    tools {
-        python 'Python3' // Assure-toi que Python3 est installé sur Jenkins
-    }
-
     environment {
-        SONARQUBE_SERVER = 'SonarQube' // Nom de ton serveur SonarQube dans Jenkins (Manage Jenkins > Configure)
+        SONARQUBE_SERVER = 'SonarQube' // Nom de ton serveur SonarQube dans Jenkins
     }
 
     stages {
@@ -38,7 +34,7 @@ pipeline {
 
         stage('SonarQube Analysis') {
             environment {
-                SONAR_TOKEN = credentials('sonarqube-token') // Remplacer par ton ID de token si besoin
+                SONAR_TOKEN = credentials('sonarqube-token') // ID du credential SonarQube
             }
             steps {
                 withSonarQubeEnv('SonarQube') {
@@ -57,10 +53,10 @@ pipeline {
 
     post {
         success {
-            echo 'Pipeline terminé avec succès!'
+            echo '✅ Pipeline terminé avec succès!'
         }
         failure {
-            echo 'Le pipeline a échoué!'
+            echo '❌ Le pipeline a échoué!'
         }
     }
 }
