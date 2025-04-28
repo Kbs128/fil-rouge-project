@@ -6,16 +6,19 @@ pipeline {
         SONARQUBE_TOKEN = credentials('sonarqube-token') // Utiliser les credentials Jenkins
     }
 
-    tools {
-        python 'Python-3.9'  // Utiliser le nom configuré pour Python
-        maven 'Maven-3.9.6' // Utiliser le nom configuré pour Maven
-        jdk 'JDK-11' // Utiliser le nom configuré pour JDK
-    }
-
     stages {
         stage('Checkout') {
             steps {
                 checkout scm
+            }
+        }
+
+        stage('Verify Python Installation') {
+            steps {
+                script {
+                    // Vérifier la version de Python installée
+                    sh 'python3 --version || echo "Python n\'est pas installé"'
+                }
             }
         }
 
