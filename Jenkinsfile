@@ -7,9 +7,9 @@ pipeline {
     }
 
     tools {
-        python 'Python-3.9' // Utiliser le nom configuré pour Python
-        maven 'Maven' // Si vous avez Maven configuré
-        jdk 'JDK' // Si vous avez JDK configuré
+        python 'Python-3.9'  // Utiliser le nom configuré pour Python
+        maven 'Maven-3.9.6' // Utiliser le nom configuré pour Maven
+        jdk 'JDK-11' // Utiliser le nom configuré pour JDK
     }
 
     stages {
