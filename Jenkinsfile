@@ -9,7 +9,7 @@ pipeline {
 
     tools {
         // Utilise le scanner SonarQube que tu as configuré dans la configuration globale
-        sonarQubeScanner 'SonarScanner'
+        sonar 'SonarScanner' // Remplacer par le nom de ton scanner SonarQube
     }
 
     stages {
