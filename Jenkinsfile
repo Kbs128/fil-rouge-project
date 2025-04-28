@@ -1,41 +1,41 @@
 pipeline {
     agent any
-
+    
     environment {
-        SONARQUBE_SERVER = 'SonarQube' // Nom de ton serveur SonarQube dans Jenkins (Manage Jenkins > Configure)
+        SONAR_TOKEN = credentials('sonar-token') // Utilise un token d'accès SonarQube stocké dans les credentials de Jenkins
     }
 
     stages {
-        stage('Checkout') {
+        stage('Checkout SCM') {
             steps {
                 checkout scm
             }
         }
-
+        
         stage('SonarQube Analysis') {
-            environment {
-                SONAR_TOKEN = credentials('sonarqube-token') // Remplacer par ton ID de token si besoin
-            }
             steps {
-                withSonarQubeEnv('SonarQube') {
-                    sh '''
+                script {
+                    // Utilisation de SonarQube Scanner pour analyser le projet
+                    withSonarQubeEnv('SonarQube') {
+                        sh '''
                         sonar-scanner \
-                        -Dsonar.projectKey=fil-rouge-project \
-                        -Dsonar.sources=. \
-                        -Dsonar.host.url=$SONAR_HOST_URL \
-                        -Dsonar.login=$SONAR_TOKEN
-                    '''
+                            -Dsonar.projectKey=fil-rouge-project \
+                            -Dsonar.sources=. \
+                            -Dsonar.host.url=http://sonarqube:9000 \
+                            -Dsonar.login=$SONAR_TOKEN
+                        '''
+                    }
                 }
             }
         }
-    }
-
-    post {
-        success {
-            echo 'Pipeline terminé avec succès!'
-        }
-        failure {
-            echo 'Le pipeline a échoué!'
+        
+        stage('Post Actions') {
+            steps {
+                script {
+                    // Attendre la fin de l'analyse de SonarQube avant de passer à l'étape suivante
+                    waitForQualityGate abortPipeline: true
+                }
+            }
         }
     }
 }
